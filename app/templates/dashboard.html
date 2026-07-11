@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% set active_page = 'dashboard' %}
+{% block title %}Dashboard — Vertex Access Control{% endblock %}
+{% block crumb %}Overview / <b>Dashboard</b>{% endblock %}
+
+{% block content %}
+
+<!-- Metric cards -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon icon-blue">
+            <i class="ti ti-users" aria-hidden="true"></i>
+        </div>
+        <div class="metric-body">
+            <p class="metric-label">Total users</p>
+            <p class="metric-value">{{ total_users }}</p>
+            <p class="metric-sub">{{ active_users }} active</p>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon icon-amber">
+            <i class="ti ti-lock-access" aria-hidden="true"></i>
+        </div>
+        <div class="metric-body">
+            <p class="metric-label">Pending requests</p>
+            <p class="metric-value">{{ pending_requests }}</p>
+            <p class="metric-sub">Awaiting review</p>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon icon-red">
+            <i class="ti ti-flag" aria-hidden="true"></i>
+        </div>
+        <div class="metric-body">
+            <p class="metric-label">Flagged logs</p>
+            <p class="metric-value">{{ flagged_logs }}</p>
+            <p class="metric-sub">Needs attention</p>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon icon-green">
+            <i class="ti ti-shield-check" aria-hidden="true"></i>
+        </div>
+        <div class="metric-body">
+            <p class="metric-label">Roles defined</p>
+            <p class="metric-value">{{ total_roles }}</p>
+            <p class="metric-sub">Access control groups</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts row -->
+<div class="charts-row">
+    <div class="chart-card">
+        <p class="chart-title">Login activity — last 7 days</p>
+        <canvas id="loginChart" height="120"></canvas>
+    </div>
+    <div class="chart-card">
+        <p class="chart-title">Request status breakdown</p>
+        <canvas id="requestChart" height="120"></canvas>
+    </div>
+</div>
+
+<!-- Recent activity feed -->
+<div class="table-wrap" style="margin-top: 20px;">
+    <div class="section-head">
+        <p class="section-title">Recent activity</p>
+        {% if current_user.role in ['Admin', 'Manager', 'Analyst'] %}
+        <a href="{{ url_for('audit.list_logs') }}" class="section-link">View all logs →</a>
+        {% endif %}
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>IP address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in recent_activity %}
+            <tr>
+                <td class="mono">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '—' }}</td>
+                <td>{{ log.username or 'unknown' }}</td>
+                <td>
+                    {% if 'FAILED' in log.action or 'DENIED' in log.action %}
+                        <span class="pill pill-denied">{{ log.action }}</span>
+                    {% elif 'SUCCESS' in log.action or 'APPROVED' in log.action %}
+                        <span class="pill pill-approved">{{ log.action }}</span>
+                    {% else %}
+                        <span class="pill pill-pending">{{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td class="mono">{{ log.ip_address or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="empty-row">No activity yet — actions will appear here after first login.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Login activity bar chart
+    const loginLabels = {{ login_chart | map(attribute='day') | list | tojson }};
+    const loginCounts = {{ login_chart | map(attribute='count') | list | tojson }};
+
+    new Chart(document.getElementById('loginChart'), {
+        type: 'bar',
+        data: {
+            labels: loginLabels.length ? loginLabels : ['No data'],
+            datasets: [{
+                label: 'Logins',
+                data: loginCounts.length ? loginCounts : [0],
+                backgroundColor: '#4f5fe0cc',
+                borderRadius: 5,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#e4e6ef' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Request status doughnut chart
+    const reqData   = {{ request_chart | tojson }};
+    const reqLabels = reqData.map(r => r.status.charAt(0).toUpperCase() + r.status.slice(1));
+    const reqCounts = reqData.map(r => r.count);
+    const reqColors = reqData.map(r =>
+        r.status === 'approved' ? '#38a16999' :
+        r.status === 'denied'   ? '#e53e3e99' : '#d69e2e99'
+    );
+
+    new Chart(document.getElementById('requestChart'), {
+        type: 'doughnut',
+        data: {
+            labels: reqLabels.length ? reqLabels : ['No requests'],
+            datasets: [{
+                data: reqCounts.length ? reqCounts : [1],
+                backgroundColor: reqColors.length ? reqColors : ['#e4e6ef'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 14 } }
+            },
+            cutout: '65%'
+        }
+    });
+</script>
+{% endblock %}
