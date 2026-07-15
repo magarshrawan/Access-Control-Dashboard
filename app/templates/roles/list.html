@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% set active_page = 'roles' %}
+{% block title %}Roles & permissions — Vertex Access Control{% endblock %}
+{% block crumb %}Identity / <b>Roles &amp; permissions</b>{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>Roles &amp; permissions</h1>
+    {% if current_user.role == 'Admin' %}<a href="{{ url_for('roles.create_role_view') }}" class="btn-primary">+ Add new</a>{% endif %}
+</div>
+<div class="table-wrap">
+    <table class="data-table">
+        <thead><tr><th>Role</th><th>Description</th><th>Permissions</th><th>Users</th>{% if current_user.role=='Admin' %}<th></th>{% endif %}</tr></thead>
+        <tbody>
+        {% for role in roles %}
+        <tr>
+            <td><span class="pill pill-{{ role.name|lower }}">{{ role.name }}</span></td>
+            <td>{{ role.description or '—' }}</td>
+            <td class="mono">{{ role.permission_count }} / 12</td>
+            <td>{{ role.user_count }}</td>
+            {% if current_user.role=='Admin' %}
+            <td class="row-actions">
+                <a href="{{ url_for('roles.edit_role_view', role_id=role.id) }}">Edit</a>
+                <form method="POST" action="{{ url_for('roles.delete_role_view', role_id=role.id) }}" class="inline-form" onsubmit="return confirm('Delete this role?');">
+                    <button type="submit" class="link-danger">Delete</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty-row">No roles defined.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
