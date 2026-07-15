@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% set active_page = 'users' %}
+{% block title %}Users — Vertex Access Control{% endblock %}
+{% block crumb %}Identity / <b>Users</b>{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>Users</h1>
+    {% if current_user.role == 'Admin' %}<a href="{{ url_for('users.create_user_view') }}" class="btn-primary">+ Add new</a>{% endif %}
+</div>
+<form method="GET" class="filter-bar">
+    <input type="text" name="search" placeholder="Search username or email" value="{{ search }}">
+    <select name="role"><option value="">All roles</option>{% for r in roles %}<option value="{{ r }}" {% if role_filter==r %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+    <select name="status"><option value="">All statuses</option><option value="active" {% if status_filter=='active' %}selected{% endif %}>Active</option><option value="inactive" {% if status_filter=='inactive' %}selected{% endif %}>Inactive</option></select>
+    <button type="submit" class="btn-secondary">Filter</button>
+</form>
+<div class="table-wrap">
+    <table class="data-table">
+        <thead><tr><th>Username</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th><th>Created</th>{% if current_user.role=='Admin' %}<th></th>{% endif %}</tr></thead>
+        <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td><td>{{ user.email }}</td><td>{{ user.department or '—' }}</td>
+            <td><span class="pill pill-{{ user.role|lower }}">{{ user.role }}</span></td>
+            <td>{% if user.is_active %}<span class="pill pill-active">Active</span>{% else %}<span class="pill pill-inactive">Inactive</span>{% endif %}</td>
+            <td class="mono">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '—' }}</td>
+            {% if current_user.role=='Admin' %}
+            <td class="row-actions">
+                <a href="{{ url_for('users.edit_user_view', user_id=user.id) }}">Edit</a>
+                {% if user.is_active %}
+                <form method="POST" action="{{ url_for('users.deactivate_user_view', user_id=user.id) }}" class="inline-form" onsubmit="return confirm('Deactivate this user?');">
+                    <button type="submit" class="link-danger">Deactivate</button>
+                </form>
+                {% endif %}
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-row">No users found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
