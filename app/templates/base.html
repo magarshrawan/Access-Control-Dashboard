@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vertex Technologies — Access Control{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+<div class="shell">
+    {% if current_user.is_authenticated %}{% include 'partials/sidebar.html' %}{% endif %}
+    <div class="main {% if not current_user.is_authenticated %}main-full{% endif %}">
+        {% if current_user.is_authenticated %}
+        <div class="topbar"><div class="crumb">{% block crumb %}{% endblock %}</div></div>
+        {% endif %}
+        <div class="body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
