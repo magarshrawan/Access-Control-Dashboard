@@ -1,0 +1,145 @@
+/* ========================================
+   DAY 5 — Responsive Design
+   Breakpoints: tablet (1024px), mobile (768px)
+   ======================================== */
+
+/* --- Tablet (1024px and below) --- */
+@media (max-width: 1024px) {
+    .sidebar { width: 180px; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+    .form-card { max-width: 100%; }
+    .form-card-wide { max-width: 100%; }
+}
+
+/* --- Mobile (768px and below) --- */
+@media (max-width: 768px) {
+
+    /* Sidebar becomes sticky top navbar */
+    .shell { flex-direction: column; }
+
+    .sidebar {
+        width: 100%;
+        padding: 0;
+        flex-direction: row;
+        align-items: center;
+        height: 56px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .brand {
+        padding: 0 14px;
+        border-bottom: none;
+        margin-bottom: 0;
+        border-right: 0.5px solid rgba(255,255,255,0.1);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .nav-group {
+        display: flex;
+        flex-direction: row;
+        padding: 0 6px;
+        align-items: center;
+        height: 100%;
+        gap: 2px;
+    }
+
+    .nav-label { display: none; }
+
+    .nav-item {
+        white-space: nowrap;
+        padding: 6px 10px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        border-radius: 0;
+        font-size: 12px;
+    }
+
+    .nav-item.active {
+        border-left: none;
+        border-bottom: 3px solid #8b93f0;
+        background: rgba(79, 95, 224, 0.15);
+        padding-left: 10px;
+    }
+
+    .sidebar-foot {
+        margin-top: 0;
+        margin-left: auto;
+        border-top: none;
+        border-left: 0.5px solid rgba(255,255,255,0.1);
+        padding: 0 14px;
+        height: 100%;
+        flex-shrink: 0;
+    }
+
+    .sidebar-foot div p { display: none; }
+
+    /* Main content */
+    .main { width: 100%; }
+    .body { padding: 12px; }
+    .topbar { padding: 10px 12px; }
+
+    /* Metric cards 2 columns on mobile */
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .metric-card { padding: 10px 12px; }
+    .metric-value { font-size: 20px; }
+
+    /* Charts stack vertically */
+    .charts-row { grid-template-columns: 1fr; gap: 8px; }
+
+    /* Tables scroll horizontally */
+    .table-wrap { overflow-x: auto; }
+    .data-table { min-width: 600px; }
+
+    /* Page head stacks vertically */
+    .page-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+    /* Filter bar stacks */
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-bar input[type="text"],
+    .filter-bar select { width: 100%; }
+
+    /* Forms */
+    .form-card { padding: 16px; max-width: 100%; }
+    .form-card-wide { max-width: 100%; }
+
+    /* Auth */
+    .auth-card { padding: 20px; max-width: 100%; }
+
+    /* Permission matrix 2 col */
+    .perm-matrix { grid-template-columns: repeat(2, 1fr); }
+
+    /* Form actions stack */
+    .form-actions { flex-direction: column; }
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary,
+    .form-actions .btn-danger {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Row actions wrap */
+    .row-actions { flex-wrap: wrap; gap: 8px; }
+
+    /* Modal full width */
+    .modal-box { max-width: 95%; padding: 18px; }
+}
+
+/* --- Small mobile (480px and below) --- */
+@media (max-width: 480px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+    .perm-matrix { grid-template-columns: 1fr; }
+    .crumb { font-size: 12px; }
+}
