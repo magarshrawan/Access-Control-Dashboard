@@ -37,7 +37,10 @@
     </div>
 
     <div class="sidebar-foot">
-        <div class="avatar">{{ current_user.username[:2]|upper }}</div>
+        <a href="{{ url_for('users.profile') }}" class="avatar" title="My profile"
+           style="text-decoration:none;cursor:pointer;">
+            {{ current_user.username[:2]|upper }}
+        </a>
         <div>
             <p class="uname">{{ current_user.username }}</p>
             <p class="urole">{{ current_user.role }}</p>
