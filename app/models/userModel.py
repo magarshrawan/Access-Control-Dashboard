@@ -19,7 +19,8 @@ def get_all_users(search=None, role_filter=None, status_filter=None):
     query += " ORDER BY created_at DESC"
     cursor.execute(query, params)
     users = cursor.fetchall()
-    cursor.close(); db.close()
+    cursor.close()
+    db.close()
     return users
 
 
@@ -28,7 +29,8 @@ def get_user_by_id(user_id):
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
     user = cursor.fetchone()
-    cursor.close(); db.close()
+    cursor.close()
+    db.close()
     return user
 
 
@@ -37,7 +39,8 @@ def get_user_by_username(username):
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
     user = cursor.fetchone()
-    cursor.close(); db.close()
+    cursor.close()
+    db.close()
     return user
 
 
@@ -50,7 +53,8 @@ def create_user(username, email, password_hash, department, role):
     )
     db.commit()
     new_id = cursor.lastrowid
-    cursor.close(); db.close()
+    cursor.close()
+    db.close()
     return new_id
 
 
@@ -62,7 +66,8 @@ def update_user(user_id, username, email, department, role, is_active):
         (username, email, department, role, is_active, user_id)
     )
     db.commit()
-    cursor.close(); db.close()
+    cursor.close()
+    db.close()
 
 
 def deactivate_user(user_id):
@@ -70,4 +75,31 @@ def deactivate_user(user_id):
     cursor = db.cursor()
     cursor.execute("UPDATE users SET is_active = FALSE WHERE id = %s", (user_id,))
     db.commit()
-    cursor.close(); db.close()
+    cursor.close()
+    db.close()
+
+
+def change_password(user_id, new_password_hash):
+    """UPDATE — change a user's password hash in the database."""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE users SET password_hash = %s WHERE id = %s",
+        (new_password_hash, user_id)
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+
+
+def update_last_login(user_id):
+    """UPDATE — record the timestamp of the user's most recent login."""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE users SET last_login = NOW() WHERE id = %s",
+        (user_id,)
+    )
+    db.commit()
+    cursor.close()
+    db.close()
