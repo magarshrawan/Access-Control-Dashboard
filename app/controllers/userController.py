@@ -1,18 +1,25 @@
 import mysql.connector
 from app import bcrypt
 from app.models.userModel import (
-    get_all_users, get_user_by_id, get_user_by_username,
-    create_user, update_user, deactivate_user,
-    change_password, update_last_login
+    get_all_users, get_all_departments, get_user_by_id,
+    get_user_by_username, create_user, update_user,
+    deactivate_user, change_password, update_last_login
 )
 from app.models.auditModel import log_action
 
 VALID_ROLES = ['Admin', 'Manager', 'Analyst', 'ReadOnly']
 
 
-def list_users_ctrl(search=None, role_filter=None, status_filter=None):
+def list_users_ctrl(search=None, role_filter=None, status_filter=None, dept_filter=None):
     try:
-        return get_all_users(search, role_filter, status_filter)
+        return get_all_users(search, role_filter, status_filter, dept_filter)
+    except mysql.connector.Error:
+        return []
+
+
+def get_departments_ctrl():
+    try:
+        return get_all_departments()
     except mysql.connector.Error:
         return []
 
@@ -68,7 +75,7 @@ def update_user_ctrl(user_id, form, actor_id, ip_address):
                    resource_id=user_id, ip_address=ip_address)
         return True, f"User '{username}' updated successfully."
     except mysql.connector.IntegrityError:
-        return False, "That username or email is already in use by another account."
+        return False, "That username or email is already in use."
     except mysql.connector.Error:
         return False, "A database error occurred. Please try again."
 
@@ -87,35 +94,24 @@ def deactivate_user_ctrl(user_id, actor_id, ip_address):
 
 
 def change_password_ctrl(user_id, form, ip_address):
-    """
-    Validates and processes a password change request.
-    Checks current password, confirms new password matches,
-    enforces minimum length, then updates the hash.
-    """
     current_password = form.get('current_password', '')
     new_password     = form.get('new_password', '')
     confirm_password = form.get('confirm_password', '')
 
     if not current_password or not new_password or not confirm_password:
         return False, "All fields are required."
-
     if len(new_password) < 8:
         return False, "New password must be at least 8 characters long."
-
     if new_password != confirm_password:
         return False, "New passwords do not match."
-
     if current_password == new_password:
         return False, "New password must be different from your current password."
-
     try:
         user = get_user_by_id(user_id)
         if not user:
             return False, "User not found."
-
         if not bcrypt.check_password_hash(user['password_hash'], current_password):
             return False, "Current password is incorrect."
-
         new_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
         change_password(user_id, new_hash)
         log_action(user_id, 'PASSWORD_CHANGED', resource_type='user',
@@ -126,7 +122,6 @@ def change_password_ctrl(user_id, form, ip_address):
 
 
 def get_profile_ctrl(user_id):
-    """Returns the full user profile for the profile page."""
     try:
         return get_user_by_id(user_id)
     except mysql.connector.Error:
