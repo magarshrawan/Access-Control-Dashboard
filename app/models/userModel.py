@@ -1,14 +1,16 @@
 from app.database import get_db
 
 
-def get_all_users(search=None, role_filter=None, status_filter=None):
+def get_all_users(search=None, role_filter=None, status_filter=None, dept_filter=None):
+    """READ — list users with optional filters including department."""
     db = get_db()
     cursor = db.cursor(dictionary=True)
     query = "SELECT * FROM users WHERE 1=1"
     params = []
+
     if search:
-        query += " AND (username LIKE %s OR email LIKE %s)"
-        params.extend([f"%{search}%", f"%{search}%"])
+        query += " AND (username LIKE %s OR email LIKE %s OR department LIKE %s)"
+        params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
     if role_filter:
         query += " AND role = %s"
         params.append(role_filter)
@@ -16,12 +18,31 @@ def get_all_users(search=None, role_filter=None, status_filter=None):
         query += " AND is_active = TRUE"
     elif status_filter == 'inactive':
         query += " AND is_active = FALSE"
+    if dept_filter:
+        query += " AND department = %s"
+        params.append(dept_filter)
+
     query += " ORDER BY created_at DESC"
     cursor.execute(query, params)
     users = cursor.fetchall()
     cursor.close()
     db.close()
     return users
+
+
+def get_all_departments():
+    """READ — get distinct departments for the filter dropdown."""
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT DISTINCT department FROM users "
+        "WHERE department IS NOT NULL AND department != '' "
+        "ORDER BY department"
+    )
+    depts = [row['department'] for row in cursor.fetchall()]
+    cursor.close()
+    db.close()
+    return depts
 
 
 def get_user_by_id(user_id):
@@ -80,7 +101,6 @@ def deactivate_user(user_id):
 
 
 def change_password(user_id, new_password_hash):
-    """UPDATE — change a user's password hash in the database."""
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
@@ -93,12 +113,10 @@ def change_password(user_id, new_password_hash):
 
 
 def update_last_login(user_id):
-    """UPDATE — record the timestamp of the user's most recent login."""
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "UPDATE users SET last_login = NOW() WHERE id = %s",
-        (user_id,)
+        "UPDATE users SET last_login = NOW() WHERE id = %s", (user_id,)
     )
     db.commit()
     cursor.close()
