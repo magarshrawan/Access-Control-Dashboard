@@ -2,51 +2,89 @@
 {% set active_page = 'audit' %}
 {% block title %}Audit log — Vertex Access Control{% endblock %}
 {% block crumb %}Monitoring / <b>Audit log</b>{% endblock %}
+
 {% block content %}
 <div class="page-head">
     <h1>Audit log</h1>
     {% if current_user.role == 'Admin' %}
-    <form method="POST" action="{{ url_for('audit.purge_logs_view') }}" class="inline-form" onsubmit="return confirm('Purge old logs? This cannot be undone.');">
-        <input type="number" name="days" value="90" min="30" style="width:70px">
-        <button type="submit" class="btn-secondary">Purge old logs</button>
+    <form method="POST"
+          action="{{ url_for('audit.purge_logs_view') }}"
+          class="inline-form"
+          data-confirm="This will permanently delete all log entries older than the specified number of days."
+          data-confirm-title="Purge old logs?">
+        <input type="number" name="days" value="90" min="30"
+               style="width:70px;padding:7px 10px;border:0.5px solid #d8dae3;border-radius:7px;font-size:12.5px;">
+        <button type="submit" class="btn-secondary">
+            <i class="ti ti-trash"></i> Purge old logs
+        </button>
     </form>
     {% endif %}
 </div>
+
 <form method="GET" class="filter-bar">
-    <input type="text" name="search" placeholder="Search user, action, or IP" value="{{ search }}">
-    <label class="form-check" style="white-space:nowrap"><input type="checkbox" name="flagged" value="1" {% if flagged_only %}checked{% endif %} onchange="this.form.submit()"> Flagged only</label>
-    <button type="submit" class="btn-secondary">Filter</button>
+    <input type="text" name="search" placeholder="Search user, action or IP" value="{{ search }}">
+    <input type="date" name="date_from" value="{{ date_from or '' }}" title="From date">
+    <input type="date" name="date_to" value="{{ date_to or '' }}" title="To date">
+    <label class="form-check" style="white-space:nowrap">
+        <input type="checkbox" name="flagged" value="1" {% if flagged_only %}checked{% endif %}> Flagged only
+    </label>
+    <button type="submit" class="btn-secondary"><i class="ti ti-filter"></i> Filter</button>
+    {% if search or flagged_only or date_from or date_to %}
+    <a href="{{ url_for('audit.list_logs') }}" class="btn-secondary"><i class="ti ti-x"></i> Clear</a>
+    {% endif %}
 </form>
+
 <div class="table-wrap">
     <table class="data-table">
-        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>IP address</th><th>Status</th>{% if current_user.role in ['Admin','Analyst'] %}<th></th>{% endif %}</tr></thead>
+        <thead>
+            <tr>
+                <th>Timestamp</th><th>User</th><th>Action</th>
+                <th>IP address</th><th>Status</th>
+                {% if current_user.role in ['Admin', 'Analyst'] %}<th></th>{% endif %}
+            </tr>
+        </thead>
         <tbody>
-        {% for log in logs %}
-        <tr>
-            <td class="mono">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '—' }}</td>
-            <td>{{ log.username or 'unknown' }}</td>
-            <td>{{ log.action }}</td>
-            <td class="mono">{{ log.ip_address or '—' }}</td>
-            <td>{% if log.flagged %}<span class="pill pill-flagged" title="{{ log.flag_reason }}">Flagged</span>{% else %}<span class="pill pill-active">Clear</span>{% endif %}</td>
-            {% if current_user.role in ['Admin','Analyst'] %}
-            <td class="row-actions">
-                {% if not log.flagged %}
-                <form method="POST" action="{{ url_for('audit.flag_log_view', log_id=log.id) }}" class="inline-form">
-                    <input type="hidden" name="reason" value="Manually flagged for review">
-                    <button type="submit" class="link-danger">Flag</button>
-                </form>
-                {% else %}
-                <form method="POST" action="{{ url_for('audit.unflag_log_view', log_id=log.id) }}" class="inline-form">
-                    <button type="submit">Clear</button>
-                </form>
+            {% for log in logs %}
+            <tr>
+                <td class="mono">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '—' }}</td>
+                <td>{{ log.username or 'unknown' }}</td>
+                <td>
+                    {% if 'FAILED' in log.action or 'DENIED' in log.action %}
+                        <span class="pill pill-denied">{{ log.action }}</span>
+                    {% elif 'SUCCESS' in log.action or 'APPROVED' in log.action %}
+                        <span class="pill pill-approved">{{ log.action }}</span>
+                    {% else %}
+                        <span class="pill pill-pending">{{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td class="mono">{{ log.ip_address or '—' }}</td>
+                <td>
+                    {% if log.flagged %}
+                        <span class="pill pill-flagged" title="{{ log.flag_reason }}">Flagged</span>
+                    {% else %}
+                        <span class="pill pill-active">Clear</span>
+                    {% endif %}
+                </td>
+                {% if current_user.role in ['Admin', 'Analyst'] %}
+                <td class="row-actions">
+                    {% if not log.flagged %}
+                    <form method="POST" action="{{ url_for('audit.flag_log_view', log_id=log.id) }}" class="inline-form">
+                        <input type="hidden" name="reason" value="Manually flagged for review">
+                        <button type="submit" class="link-danger">Flag</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('audit.unflag_log_view', log_id=log.id) }}" class="inline-form">
+                        <button type="submit">Clear</button>
+                    </form>
+                    {% endif %}
+                </td>
                 {% endif %}
-            </td>
-            {% endif %}
-        </tr>
-        {% else %}
-        <tr><td colspan="6" class="empty-row">No log entries found.</td></tr>
-        {% endfor %}
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="empty-row">No log entries found.</td></tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
+<p class="results-count">Showing {{ logs|length }} entr{% if logs|length != 1 %}ies{% else %}y{% endif %}</p>
 {% endblock %}
