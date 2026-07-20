@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}403 Access Denied — Vertex Access Control{% endblock %}
+{% block content %}
+<div class="error-page">
+    <div class="error-icon error-icon-red">
+        <i class="ti ti-shield-x"></i>
+    </div>
+    <h1 class="error-code">403</h1>
+    <h2 class="error-title">Access Denied</h2>
+    <p class="error-message">
+        You don't have permission to view this page.<br>
+        Contact your administrator if you believe this is a mistake.
+    </p>
+    <div class="error-actions">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-primary">
+            <i class="ti ti-home"></i> Back to dashboard
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn-secondary">
+            <i class="ti ti-logout"></i> Sign in as different user
+        </a>
+    </div>
+    <p class="error-meta">
+        Your role: <span class="pill pill-{{ current_user.role|lower }}">{{ current_user.role }}</span>
+    </p>
+</div>
+{% endblock %}
