@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}404 Not Found — Vertex Access Control{% endblock %}
+{% block content %}
+<div class="error-page">
+    <div class="error-icon error-icon-blue">
+        <i class="ti ti-map-search"></i>
+    </div>
+    <h1 class="error-code">404</h1>
+    <h2 class="error-title">Page Not Found</h2>
+    <p class="error-message">
+        The page you are looking for doesn't exist or has been moved.<br>
+        Double check the URL or navigate back to the dashboard.
+    </p>
+    <div class="error-actions">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-primary">
+            <i class="ti ti-home"></i> Back to dashboard
+        </a>
+        <a href="javascript:history.back()" class="btn-secondary">
+            <i class="ti ti-arrow-left"></i> Go back
+        </a>
+    </div>
+</div>
+{% endblock %}
