@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% set active_page = 'roles' %}
+{% block title %}{% if role %}Edit role{% else %}Add role{% endif %} — Vertex Access Control{% endblock %}
+{% block crumb %}Identity / Roles / <b>{% if role %}Edit{% else %}New{% endif %}</b>{% endblock %}
+{% block content %}
+<div class="form-card form-card-wide">
+    <h1>{% if role %}Edit role{% else %}Add new role{% endif %}</h1>
+    <form method="POST">
+        <div class="form-group"><label>Role name</label><input type="text" name="name" value="{{ role.name if role else '' }}" required></div>
+        <div class="form-group"><label>Description</label><input type="text" name="description" value="{{ role.description if role else '' }}"></div>
+        <div class="form-group">
+            <label>Permissions</label>
+            <div class="perm-matrix">
+                {% set ns = namespace(last_resource='') %}
+                {% for perm in permissions %}
+                {% if perm.resource != ns.last_resource %}
+                {% if ns.last_resource != '' %}</div>{% endif %}
+                <div class="perm-group"><p class="perm-resource">{{ perm.resource }}</p>
+                {% set ns.last_resource = perm.resource %}
+                {% endif %}
+                <label class="perm-check"><input type="checkbox" name="permissions" value="{{ perm.id }}" {% if perm.id in assigned_ids %}checked{% endif %}> {{ perm.action }}</label>
+                {% endfor %}
+                {% if permissions %}</div>{% endif %}
+            </div>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn-primary">Save</button><a href="{{ url_for('roles.list_roles') }}" class="btn-secondary">Cancel</a></div>
+    </form>
+</div>
+{% endblock %}
