@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% set active_page = 'requests' %}
+{% block title %}New request — Vertex Access Control{% endblock %}
+{% block crumb %}Access / Requests / <b>New</b>{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h1>Request access</h1>
+    <form method="POST">
+        <div class="form-group"><label>Resource</label><input type="text" name="resource" placeholder="e.g. Production DB (read), Staging SSH" required></div>
+        <div class="form-group"><label>Justification</label><textarea name="justification" rows="4" placeholder="Why do you need this access?" required></textarea></div>
+        <div class="form-group"><label>Expires on (optional)</label><input type="date" name="expires_at"><p class="hint">Leave blank for no automatic expiry.</p></div>
+        <div class="form-actions"><button type="submit" class="btn-primary">Submit request</button><a href="{{ url_for('requests.list_requests') }}" class="btn-secondary">Cancel</a></div>
+    </form>
+</div>
+{% endblock %}
