@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% set active_page = 'requests' %}
+{% block title %}Review request — Vertex Access Control{% endblock %}
+{% block crumb %}Access / Requests / <b>Review</b>{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h1>Review access request</h1>
+    <div class="review-summary">
+        <p><span class="label">Requester</span> {{ req.requester_name }}</p>
+        <p><span class="label">Resource</span> {{ req.resource }}</p>
+        <p><span class="label">Justification</span> {{ req.justification }}</p>
+        {% if req.expires_at %}<p><span class="label">Requested expiry</span> {{ req.expires_at.strftime('%Y-%m-%d') }}</p>{% endif %}
+    </div>
+    <form method="POST">
+        <div class="form-group"><label>Notes</label><textarea name="reviewer_notes" rows="3" placeholder="Optional notes for the record"></textarea></div>
+        <div class="form-actions">
+            <button type="submit" name="decision" value="approved" class="btn-primary">Approve</button>
+            <button type="submit" name="decision" value="denied" class="btn-danger">Deny</button>
+            <a href="{{ url_for('requests.list_requests') }}" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
